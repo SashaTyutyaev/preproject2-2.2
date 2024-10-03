@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface CarService {
     Car addCar(CarDto carDto);
-    List<CarDto> getCars(Integer limit);
+    List<CarDto> getCars(Integer limit, String sortBy);
 }
