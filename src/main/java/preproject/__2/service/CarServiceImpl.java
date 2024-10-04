@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import preproject.__2.model.Car;
 import preproject.__2.model.dto.CarDto;
 import preproject.__2.model.dto.CarMapper;
@@ -29,6 +30,7 @@ public class CarServiceImpl implements CarService {
     private final CarRepository carRepository;
 
     @Override
+    @Transactional
     public Car addCar(CarDto carDto) {
         Car savedCar = carRepository.save(CarMapper.fromDto(carDto));
         log.info("Car with id {} successfully saved", savedCar.getId());
@@ -36,6 +38,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CarDto> getCars(Integer limit, String sortBy, Boolean howToSort) {
         List<Car> cars;
         Sort sort;
@@ -73,13 +76,5 @@ public class CarServiceImpl implements CarService {
         return cars.stream()
                 .map(CarMapper::toDto)
                 .toList();
-    }
-
-    private <T> T chooseSort(Sort sort, String sortBy, Boolean useObjectSort) {
-        if (useObjectSort) {
-            return (T) sortBy;
-        } else {
-            return (T) sort;
-        }
     }
 }
