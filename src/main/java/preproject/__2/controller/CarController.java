@@ -27,8 +27,9 @@ public class CarController {
     @GetMapping
     public String getCars(@RequestParam(required = false) Integer limit,
                           @RequestParam(required = false) String sortBy,
+                          @RequestParam(required = false, defaultValue = "false") Boolean howToSort,
                           Model model) {
-        model.addAttribute("cars", carService.getCars(limit, sortBy));
+        model.addAttribute("cars", carService.getCars(limit, sortBy, howToSort));
         return "cars";
     }
 
