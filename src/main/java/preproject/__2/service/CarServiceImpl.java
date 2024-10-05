@@ -48,6 +48,32 @@ public class CarServiceImpl implements CarService {
                 .toList();
     }
 
+    private List<Car> retrieveCarsWithoutLimit(Boolean howToSort, String sortBy) {
+        if (sortBy != null) {
+            validateSortParameter(sortBy);
+            List<Car> cars = findWithoutLimitWithSort(howToSort, sortBy);
+            logCars(cars.size(), "without limit with sort");
+            return cars;
+        } else {
+            List<Car> cars = carRepository.findAll();
+            logCars(cars.size(), "without limit and sort");
+            return cars;
+        }
+    }
+
+    private List<Car> retrieveCarsWithLimit(Integer limit, String sortBy, Boolean howToSort) {
+        if (sortBy != null) {
+            validateSortParameter(sortBy);
+            List<Car> cars = findWithLimitAndSort(limit, sortBy, howToSort);
+            logCars(cars.size(), "with limit and sort");
+            return cars;
+        } else {
+            List<Car> cars = carRepository.findAllWithLimit(limit);
+            logCars(cars.size(), "with limit without sort");
+            return cars;
+        }
+    }
+
     private List<Car> findWithoutLimitWithSort(boolean howToSort, String sortBy) {
         List<Car> cars;
         if (howToSort) {
@@ -78,32 +104,6 @@ public class CarServiceImpl implements CarService {
         if (!enabledFields.contains(sortBy)) {
             log.error("Invalid sort parameter: {}", sortBy);
             throw new IllegalSortException("Invalid sort parameter: " + sortBy);
-        }
-    }
-
-    private List<Car> retrieveCarsWithoutLimit(Boolean howToSort, String sortBy) {
-        if (sortBy != null) {
-            validateSortParameter(sortBy);
-            List<Car> cars = findWithoutLimitWithSort(howToSort, sortBy);
-            logCars(cars.size(), "without limit with sort");
-            return cars;
-        } else {
-            List<Car> cars = carRepository.findAll();
-            logCars(cars.size(), "without limit and sort");
-            return cars;
-        }
-    }
-
-    private List<Car> retrieveCarsWithLimit(Integer limit, String sortBy, Boolean howToSort) {
-        if (sortBy != null) {
-            validateSortParameter(sortBy);
-            List<Car> cars = findWithLimitAndSort(limit, sortBy, howToSort);
-            logCars(cars.size(), "with limit and sort");
-            return cars;
-        } else {
-            List<Car> cars = carRepository.findAllWithLimit(limit);
-            logCars(cars.size(), "with limit without sort");
-            return cars;
         }
     }
 
