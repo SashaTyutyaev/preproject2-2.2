@@ -23,6 +23,7 @@ public class CarServiceImpl implements CarService {
     private Integer maxCar;
     @Value("${enabledFields}")
     private List<String> enabledFields;
+
     private final CarRepository carRepository;
 
     @Override
