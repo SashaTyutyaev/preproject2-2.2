@@ -19,13 +19,11 @@ import java.util.List;
 @Slf4j
 public class CarServiceImpl implements CarService {
 
-    private final CarRepository carRepository;
     @Value("${maxCar}")
     private Integer maxCar;
     @Value("${enabledFields}")
     private List<String> enabledFields;
-    @Value("${howToSort}")
-    private List<Boolean> howToSortFields;
+    private final CarRepository carRepository;
 
     @Override
     @Transactional
@@ -40,23 +38,9 @@ public class CarServiceImpl implements CarService {
     public List<CarDto> getCars(Integer limit, String sortBy, Boolean howToSort) {
         List<Car> cars;
         if (limit == null || limit >= maxCar) {
-            if (sortBy != null) {
-                validateSortParameter(sortBy, howToSort);
-                cars = findWithoutLimitWithSort(howToSort, sortBy);
-                log.info("Successfully retrieved {} cars with sort and without limit", cars.size());
-            } else {
-                cars = carRepository.findAll();
-                log.info("Successfully retrieved {} cars without sort and limit", cars.size());
-            }
+            cars = retrieveCarsWithoutLimit(howToSort, sortBy);
         } else {
-            if (sortBy != null) {
-                validateSortParameter(sortBy, howToSort);
-                cars = findWithLimitAndSort(limit, sortBy, howToSort);
-                log.info("Successfully retrieved {} cars with sort and limit", cars.size());
-            } else {
-                cars = carRepository.findAllWithLimit(limit);
-                log.info("Successfully retrieved {} cars without sort and with limit", cars.size());
-            }
+            cars = retrieveCarsWithLimit(limit, sortBy, howToSort);
         }
         return cars.stream()
                 .map(CarMapper::toDto)
@@ -67,10 +51,10 @@ public class CarServiceImpl implements CarService {
         List<Car> cars;
         if (howToSort) {
             Sort sort = Sort.by(Sort.Direction.ASC, sortBy);
-            log.info("Using sort with object Sort");
+            logSort("object Sort");
             cars = carRepository.findAll(sort);
         } else {
-            log.info("Using sort with sql order by");
+            logSort("sql Order by");
             cars = carRepository.findAllWithSortBy(sortBy);
         }
         return cars;
@@ -80,24 +64,53 @@ public class CarServiceImpl implements CarService {
         List<Car> cars;
         if (howToSort) {
             Sort sort = Sort.by(Sort.Direction.DESC, sortBy);
-            log.info("Using sort with object Sort");
+            logSort("object Sort");
             cars = carRepository.findAllWithLimit(limit, sort);
         } else {
-            log.info("Using sort with sql order by");
+            logSort("sql Order by");
             cars = carRepository.findAllWithLimitAndSortBy(limit, sortBy);
         }
         return cars;
     }
 
-    private void validateSortParameter(String sortBy, Boolean howToSort) {
+    private void validateSortParameter(String sortBy) {
         if (!enabledFields.contains(sortBy)) {
             log.error("Invalid sort parameter: {}", sortBy);
             throw new IllegalSortException("Invalid sort parameter: " + sortBy);
         }
+    }
 
-        if (!howToSortFields.contains(howToSort)) {
-            log.error("Invalid sort parameter: {}", howToSort);
-            throw new IllegalSortException("Invalid sort parameter: " + howToSort);
+    private List<Car> retrieveCarsWithoutLimit(Boolean howToSort, String sortBy) {
+        if (sortBy != null) {
+            validateSortParameter(sortBy);
+            List<Car> cars = findWithoutLimitWithSort(howToSort, sortBy);
+            logCars(cars.size(), "without limit with sort");
+            return cars;
+        } else {
+            List<Car> cars = carRepository.findAll();
+            logCars(cars.size(), "without limit and sort");
+            return cars;
         }
+    }
+
+    private List<Car> retrieveCarsWithLimit(Integer limit, String sortBy, Boolean howToSort) {
+        if (sortBy != null) {
+            validateSortParameter(sortBy);
+            List<Car> cars = findWithLimitAndSort(limit, sortBy, howToSort);
+            logCars(cars.size(), "with limit and sort");
+            return cars;
+        } else {
+            List<Car> cars = carRepository.findAllWithLimit(limit);
+            logCars(cars.size(), "with limit without sort");
+            return cars;
+        }
+    }
+
+    private void logCars(int size, String text) {
+        log.info("Successfully retrieved {} cars {}", size, text);
+    }
+
+    private void logSort(String text) {
+        log.info("Using sort with {}", text);
     }
 }
